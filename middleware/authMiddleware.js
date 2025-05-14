@@ -6,6 +6,8 @@ const signupvalidation = (req, res, next) => {
         name: joi.string().min(3).max(30).required(),
         email: joi.string().email().required(),
         password: joi.string().min(6).max(15).required(),
+        role:joi.string().valid('admin', 'customer').default('customer'),
+
     });
 
     const { error } = signupschema.validate(req.body);
@@ -29,7 +31,7 @@ const loginvalidation = (req, res, next) => {
 }
 
 const authenticate = (req, res, next) => {
-  const token = req.headers.authorization?.split(" ")[1]; // expects "Bearer <token>"
+  const token = req.headers.authorization?.split(" ")[1];
 
   if (!token) {
     return res.status(401).json({ message: "Access Denied! No token provided." });
@@ -37,7 +39,7 @@ const authenticate = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY || "default_secret");
-    req.user = decoded; // { _id, email }
+    req.user = decoded;
     next();
   } catch (err) {
     return res.status(403).json({ message: "Invalid or expired token" });

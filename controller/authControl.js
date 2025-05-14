@@ -1,25 +1,32 @@
 const e = require('express');
 const {userModel} = require('../models/user');
-// const bcrypt = require('bcrypt');
 
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 
 
 const signup= async (req, res) => {
     
     try {
-        // Check if user already exists
-        const { name, email, password } = req.body;
+        const { name, email, password ,role} = req.body;
         const existingUser = await userModel.findOne({ email });
         if (existingUser) {
             return res.send("User already exists")
         };
     
+        // const mymodel = await userModel.create({
+        //     name,
+        //     email,
+        //     password,
+        //     role
+        // });
         const mymodel = await userModel.create({
             name,
             email,
-            password
+            password: await bcrypt.hash(password, 10),
+            role
         });
+        
         res.send("User created successfully");
     }
     catch (error) {
@@ -29,17 +36,18 @@ const signup= async (req, res) => {
 
 const login = async (req, res) => {
     try {
-        const { email, password } = req.body;
+        const { email, password ,role } = req.body;
         const existingUser = await userModel.findOne({ email });
         if (!existingUser) {
             return res.send("User not exist ,please signup")
         }
-        const ipass =password===existingUser.password;
+        // const ipass =password===existingUser.password;
+        const ipass = await bcrypt.compare(password, existingUser.password);
         if (!ipass) {
             return res.send("Invalid password")
         }
 
-        const jwtToken = jwt.sign({ email:existingUser.email , _id:existingUser._id , name:existingUser.name },
+        const jwtToken = jwt.sign({ email:existingUser.email , _id:existingUser._id , name:existingUser.name, role:existingUser.role},
              process.env.JWT_SECRET_key || "defaultsecretkey",
              {expiresIn: "24h"}
         );
@@ -50,6 +58,7 @@ const login = async (req, res) => {
     
                 name: existingUser.name,
                 email: existingUser.email,
+                role: existingUser.role,
         });
 
 
@@ -61,5 +70,5 @@ const login = async (req, res) => {
 
 module.exports = {
     signup,
-    login
+    login,
 }

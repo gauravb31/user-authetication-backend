@@ -15,10 +15,6 @@ require('./models/dbconfig');
 app.use(bodyParser.json());
 app.use('/api', approuter);
 
-
-app.get('/', (req, res) => {
-    res.send("Hello from server");
-});
 app.listen(PORT, () => {
     console.log("Server is running on port 5000");
 });
